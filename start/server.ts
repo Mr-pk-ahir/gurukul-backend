@@ -1,23 +1,39 @@
+// app/start/server.ts
+import express from "express";
 import dotenv from "dotenv";
-dotenv.config();
-
-import express, { Request, Response } from "express";
+import cors from "cors";
 import routes from "../app/route/Routes";
+import { connectDB } from "../app/db/database";
+
+dotenv.config();
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://gurukul-vert.vercel.app"
+];
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true
+}));
+
+// ડેટાબેઝ કનેક્શન
+connectDB();
+
 app.use(express.json());
 
-// Health check route - test karva mate ke server chalu chhe ke nahi
-app.get("/", (req: Request, res: Response) => {
-  res.json({ message: "Gurukul backend server chalu chhe" });
-});
-
-// Badha routes "/api" prefix sathe mount thay chhe
-app.use("/api", routes);
+app.use("/", routes);
 
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
-  console.log(`Server http://localhost:${PORT} par chalu chhe`);
+  console.log(`Server is running on port ${PORT}`);
 });
