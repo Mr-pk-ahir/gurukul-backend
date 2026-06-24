@@ -18,10 +18,10 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: result.message });
     }
 
+    // ✅ અહીંથી token: result.token કાઢી નાખ્યું છે
     return res.status(200).json({
       message: result.message,
-      token: result.token,
-      user: result.user,
+      user: result.user, 
     });
   } catch (error) {
     console.error("Login error:", error);
