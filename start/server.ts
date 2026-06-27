@@ -1,4 +1,3 @@
-// app/start/server.ts
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -25,7 +24,6 @@ app.use(cors({
   credentials: true
 }));
 
-// ડેટાબેઝ કનેક્શન
 connectDB();
 
 app.use(express.json());

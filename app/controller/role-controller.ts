@@ -8,20 +8,25 @@ const roleService = new RoleService();
 
 export class RoleController {
 
-    // 📝 Create Role Controller
+    /**
+     * 🚀 ૧. રોલ ક્રિએટ કરવાનો એન્ડપોઇન્ટ
+     */
     public async createRole(req: Request, res: Response): Promise<Response> {
         try {
-            const roleData: RoleCreate = req.body;
+            const { roleName, roleCode, description, permissions } = req.body;
 
-            // જરૂરી ફિલ્ડ્સનું વેલિડેશન
-            if (!roleData.roleName || !roleData.roleCode || !roleData.permissions) {
+            // ફ્રન્ટએન્ડ તરફથી જરૂરી ડેટા આવે છે કે નહીં તેનું વેલિડેશન
+            if (!roleName || !roleCode || !permissions) {
                 return res.status(400).json({
                     success: false,
                     message: "Required fields (roleName, roleCode, permissions) are missing."
                 });
             }
 
+            const roleData: RoleCreate = { roleName, roleCode, description, permissions };
+
             const newRole = await roleService.createRole(roleData);
+            
             return res.status(201).json({
                 success: true,
                 message: "Role created successfully!",
@@ -29,16 +34,23 @@ export class RoleController {
             });
 
         } catch (error: any) {
-            // PostgreSQL Unique Violation (જો રોલ નેમ કે કોડ ઓલરેડી હોય)
+            // PostgreSQL ડેટાબેઝ યુનિક કોન્સ્ટ્રેન્ટ (Duplicate) એરર હેન્ડલિંગ કોડ
             if (error.code === "23505") {
                 return res.status(400).json({
                     success: false,
                     message: "Role Name or Role Code already exists."
                 });
             }
-            return res.status(500).json({ success: false, message: error.message });
+            return res.status(500).json({ 
+                success: false, 
+                message: error.message 
+            });
         }
     }
+
+    /**
+     * 🔍 ૨. બધા જ રોલ્સ એકસાથે ગેટ કરવાનો એન્ડપોઇન્ટ
+     */
     public async getAllRoles(req: Request, res: Response): Promise<Response> {
         try {
             const roles = await roleService.getAllRoles();
@@ -51,7 +63,7 @@ export class RoleController {
         } catch (error: any) {
             return res.status(500).json({
                 success: false,
-                message: "રોલ્સ મેળવતી વખતે સર્વર એરર આવી.",
+                message: "Server Error",
                 error: error.message
             });
         }

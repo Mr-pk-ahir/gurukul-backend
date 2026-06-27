@@ -9,9 +9,8 @@ export interface ModulePermissions {
     [moduleName: string]: PermissionActions;
 }
 
-// 🎯 Main Role Interface
 export interface RoleCreate {
-    roleId: number;
+    roleId?: number; // ક્રિએટ કરતી વખતે ઓપ્શનલ રાખ્યો છે
     roleName: string;
     roleCode: string;
     description?: string;

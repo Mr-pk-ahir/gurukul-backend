@@ -1,6 +1,3 @@
-// app/controller/authController.ts
-// Request male, validate kare, service ne call kare, response pacho mokle.
-
 import { Request, Response } from "express";
 import { loginUser } from "../service/authService";
 
@@ -18,7 +15,6 @@ export const login = async (req: Request, res: Response) => {
       return res.status(401).json({ message: result.message });
     }
 
-    // ✅ અહીંથી token: result.token કાઢી નાખ્યું છે
     return res.status(200).json({
       message: result.message,
       user: result.user, 

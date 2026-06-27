@@ -1,7 +1,6 @@
-// 📂 ફાઈલ પાથ: app/controller/admission-controller.ts
 import { Request, Response } from "express";
 import { AdmissionService } from "../service/admission-service";
-import { CreateAdmissionInput } from "../module/admission-module"; // 👈 સાચો પાથ અહીંયા અપડેટ કર્યો
+import { CreateAdmissionInput } from "../module/admission-module";
 
 const admissionService = new AdmissionService();
 
@@ -17,7 +16,6 @@ export class AdmissionController {
                 additionalDetails 
             } = req.body;
 
-            // વેલિડેશન
             if (!applicantName || !departmentId || !departmentName) {
                 return res.status(400).json({ success: false, message: "જરૂરી બધી વિગતો ભરો." });
             }

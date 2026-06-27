@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 
 export class UserService {
   
+  // 📝 ૧. નવો યુઝર રજીસ્ટર/ક્રિએટ કરવા માટે
   public async createUser(data: UserCreate) {
     const client = await pool.connect();
 
@@ -14,7 +15,8 @@ export class UserService {
       const hashedPassword = await bcrypt.hash(data.password, saltRounds);
 
       let finalStatus = data.status || "PENDING";
-      if (data.username === "super-admin" && data.password === "admin123") {
+      // જો ડેટાબેઝમાં ડાયરેક્ટ સપર-એડમિન ક્રિએટ કરવો હોય તો ઓટોમેટિક APPROVED થશે
+      if (data.username === "super-admin") {
         finalStatus = "APPROVED";
       }
 
@@ -25,7 +27,7 @@ export class UserService {
           joining_date, status
         ) 
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
-        RETURNING suid, avatar, name, username, bod, department_id, section_id, standard_id, role_id, role_code, joining_date AS "joiningDate", status;
+        RETURNING suid, avatar, name, username, bod, department_id AS "departmentId", section_id AS "sectionId", standard_id AS "standardId", role_id AS "roleId", role_code AS "roleCode", joining_date AS "joiningDate", status;
       `;
 
       const values = [
@@ -34,12 +36,10 @@ export class UserService {
         data.joiningDate, finalStatus
       ];
 
-      // ⚠️ નોંધ: અહીં pool.query ને બદલે client.query વાપરવું જરૂરી છે
       const result = await client.query(query, values);
       const newUser = result.rows[0];
 
-      // 👑 ઑટોમેશન લોજિક: જો રોલ Department Head હોય અને ડિપાર્ટમેન્ટ સિલેક્ટ કર્યો હોય
-      // (તમારા ફ્રન્ટએન્ડના રોલ કોડ મુજબ 'ROLE_DEPARTMENT_HEAD' કે 'DEPARTMENT_HEAD' ચેક કરી લેવું)
+      // 👑 HOD ઓટોમેશન લોજિક
       if ((data.roleCode === 'HEAD100' || data.roleCode === 'DEPARTMENT_HEAD') && data.departmentId) {
         const updateDeptQuery = `
           UPDATE departments 
@@ -50,22 +50,19 @@ export class UserService {
         console.log(`🎯 HOD Automation: યુઝર ${data.suid} ને ડિપાર્ટમેન્ટ ${data.departmentId} ના હેડ સેટ કરી દીધા છે.`);
       }
 
-      // 🎉 જો બંને ક્વેરી સક્સેસ જાય તો જ ડેટા કાયમી સેવ (COMMIT) કરો
       await client.query('COMMIT');
       return newUser;
 
     } catch (error) {
-      // ❌ જો કોઈ પણ ક્વેરીમાં લોચો થાય તો આખું ટ્રાન્ઝેક્શન કેન્સલ (ROLLBACK) કરો
       await client.query('ROLLBACK');
       console.error("❌ [UserService Error] createUser માં પ્રોબ્લેમ છે:", error);
       throw error;
     } finally {
-      // 🔓 કામ પત્યા પછી ડેટાબેઝ ક્લાયન્ટને ફ્રી (Release) કરો
       client.release();
     }
   }
 
-  // 🔍 ૨. બધા યુઝર્સનો ડેટા ફેચ કરવા માટે (ટેબલ માટે)
+  // 🔍 ૨. બધા યુઝર્સનો ડેટા ફેચ કરવા માટે (ટેબલ લિસ્ટ માટે)
   public async getAllUsers() {
     const query = `
       SELECT 
@@ -79,12 +76,15 @@ export class UserService {
     return result.rows;
   }
 
-  // 🔑 ૩. લોગિન વખતે યુઝરને શોધવા માટે
+  // 🔑 ૩. લોગિન વખતે યુઝરને ડેટાબેઝમાંથી શોધવા માટે (સુપર-એડમિન સહિત બધા માટે)
   public async findUserByUsername(username: string) {
     const query = `
-      SELECT suid, avatar, name, username, password, status 
-      FROM users 
-      WHERE username = $1;
+      SELECT 
+        u.suid, u.avatar, u.name, u.username, u.password, u.status, u.role_code AS "roleCode", u.department_id AS "departmentId",
+        r.role_name AS "roleName"
+      FROM users u
+      LEFT JOIN roles r ON u.role_code = r.role_code
+      WHERE u.username = $1;
     `;
     const result = await pool.query(query, [username]);
     return result.rows[0];

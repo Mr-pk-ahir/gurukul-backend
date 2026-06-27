@@ -17,8 +17,10 @@ export interface UserCreate {
 }
 
 export interface AuthUserResponse {
-    id: number; // યુઝરની suid
+    suid: number; 
+    name: string;
     username: string;
+    avatar: string;
     roleName: string;
     roleCode: string;
     departmentId: number;

@@ -1,13 +1,12 @@
 // 📂 ફાઈલ પાથ: app/service/role-service.ts
 
-// 🎯 ૧. તમારા પ્રોજેક્ટનો સાચો ડેટાબેઝ કનેક્શન પાથ અહીં ઇમ્પોર્ટ કરો
 import { pool } from "../db/database";
 import { RoleCreate, ModulePermissions } from "../module/role-module";
 
 export class RoleService {
 
     /**
-     * ➕ ૧. નવો રોલ ડેટાબેઝમાં સેવ કરવા માટે (હવે લાઇવ ક્વેરી સાથે)
+     * ➕ ૧. નવો રોલ ડેટાબેઝમાં સેવ કરવા માટે
      */
     public async createRole(roleData: RoleCreate): Promise<any> {
         try {
@@ -25,14 +24,11 @@ export class RoleService {
                 JSON.stringify(roleData.permissions)
             ];
 
-            // ⚡ ડીબી ક્વેરી લાઇવ રન થશે
             const result = await pool.query(query, values);
-
-            // ડેટાબેઝમાં જે નવો રોડ સેવ થયો તે રિટર્ન કરશે
             return result.rows[0];
 
         } catch (error) {
-            throw error; // આ એરર કંટ્રોલર પકડશે (catch કરશે)
+            throw error;
         }
     }
 
@@ -41,7 +37,7 @@ export class RoleService {
      */
     public static async getRolePermissions(roleCode: string): Promise<ModulePermissions | null> {
         try {
-            // સુપર એડમિન માટે ડાયરેક્ટ બાયપાસ
+            // સુપર એડમિન માટે ડાયરેક્ટ ઓલ-એક્સેસ બાયપાસ બાય-ડિફોલ્ટ રિટર્ન
             if (roleCode === "ROLE_SUPER_ADMIN") {
                 return {
                     "Users": { create: true, edit: true, view: true, delete: true },
@@ -50,12 +46,12 @@ export class RoleService {
                 };
             }
 
-            // ⚡ ડેટાબેઝમાંથી પર્ટીક્યુલર રોલ કોડની પરમિશન લાવો
             const query = `SELECT permissions FROM roles WHERE role_code = $1;`;
             const result = await pool.query(query, [roleCode]);
 
             if (result.rows.length > 0) {
-                return result.rows[0].permissions; // સીધું JSON ઓબ્જેક્ટ મળશે
+                // PostgreSQL JSONB કોલમ ઓટોમેટિક ઓબ્જેક્ટ તરીકે રિટર્ન કરે છે
+                return result.rows[0].permissions; 
             }
 
             return null;
@@ -64,15 +60,19 @@ export class RoleService {
             return null;
         }
     }
+
+    /**
+     * 📋 ૩. બધા જ રોલ્સનું લિસ્ટ મેળવવા માટે
+     */
     public async getAllRoles(): Promise<any[]> {
         try {
             const query = `
-                SELECT role_id, role_name, role_code, description 
+                SELECT role_id, role_name, role_code, description, permissions, created_at 
                 FROM roles 
                 ORDER BY role_name ASC;
             `;
             const result = await pool.query(query);
-            return result.rows; // બધા રોલ્સનો એરે (Array) રિટર્ન કરશે
+            return result.rows;
         } catch (error) {
             throw error;
         }

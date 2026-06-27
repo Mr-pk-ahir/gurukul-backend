@@ -1,4 +1,3 @@
-// 📂 ફાઈલ પાથ: app/service/admission-service.ts
 import { pool } from "../db/database";
 import { CreateAdmissionInput } from "../module/admission-module";
 
@@ -21,7 +20,7 @@ export class AdmissionService {
         
         const values = [
             input.applicantName,
-            input.applicantSuid, // 👈 ક્વેરીમાં પાસ કર્યો
+            input.applicantSuid,
             input.requestedRole || 'STUDENT',
             input.departmentId,
             input.departmentName,
