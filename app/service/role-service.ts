@@ -5,9 +5,6 @@ import { RoleCreate, ModulePermissions } from "../module/role-module";
 
 export class RoleService {
 
-    /**
-     * ➕ ૧. નવો રોલ ડેટાબેઝમાં સેવ કરવા માટે
-     */
     public async createRole(roleData: RoleCreate): Promise<any> {
         try {
             const query = `
@@ -32,9 +29,6 @@ export class RoleService {
         }
     }
 
-    /**
-     * 🔍 ૨. મિડલવેર માટે રોલની પરમિશન્સ ડેટાબેઝમાંથી લાઈવ શોધવા
-     */
     public static async getRolePermissions(roleCode: string): Promise<ModulePermissions | null> {
         try {
             // સુપર એડમિન માટે ડાયરેક્ટ ઓલ-એક્સેસ બાયપાસ બાય-ડિફોલ્ટ રિટર્ન
@@ -60,15 +54,11 @@ export class RoleService {
             return null;
         }
     }
-
-    /**
-     * 📋 ૩. બધા જ રોલ્સનું લિસ્ટ મેળવવા માટે
-     */
     public async getAllRoles(): Promise<any[]> {
         try {
             const query = `
-                SELECT role_id, role_name, role_code, description, permissions, created_at 
-                FROM roles 
+                SELECT role_code, role_name, description, permissions, created_at 
+                FROM roles
                 ORDER BY role_name ASC;
             `;
             const result = await pool.query(query);

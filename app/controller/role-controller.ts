@@ -47,10 +47,6 @@ export class RoleController {
             });
         }
     }
-
-    /**
-     * 🔍 ૨. બધા જ રોલ્સ એકસાથે ગેટ કરવાનો એન્ડપોઇન્ટ
-     */
     public async getAllRoles(req: Request, res: Response): Promise<Response> {
         try {
             const roles = await roleService.getAllRoles();

@@ -23,16 +23,17 @@ export class UserService {
       const query = `
         INSERT INTO users (
           suid, avatar, name, username, password, bod, 
-          department_id, section_id, standard_id, role_id, role_code, 
+          department_id, section_id, standard_id, role_code, 
           joining_date, status
         ) 
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13) 
-        RETURNING suid, avatar, name, username, bod, department_id AS "departmentId", section_id AS "sectionId", standard_id AS "standardId", role_id AS "roleId", role_code AS "roleCode", joining_date AS "joiningDate", status;
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12) 
+        RETURNING suid, avatar, name, username, bod, department_id AS "departmentId", section_id AS "sectionId", standard_id AS "standardId", role_code AS "roleCode", joining_date AS "joiningDate", status;
       `;
 
+      // 🛑 સુધારો: અહીંયાથી data.roleId કાઢી નાખ્યું છે. હવે કુલ 12 વેલ્યુ જ છે.
       const values = [
         data.suid, data.avatar, data.name, data.username, hashedPassword, data.bod,
-        data.departmentId, data.sectionId, data.standardId, data.roleId, data.roleCode,
+        data.departmentId, data.sectionId, data.standardId, data.roleCode, 
         data.joiningDate, finalStatus
       ];
 
