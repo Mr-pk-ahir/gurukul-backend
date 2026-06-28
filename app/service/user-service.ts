@@ -3,7 +3,7 @@ import { UserCreate } from "../module/user-module";
 import bcrypt from "bcrypt";
 
 export class UserService {
-  
+
   // 📝 ૧. નવો યુઝર રજીસ્ટર/ક્રિએટ કરવા માટે
   public async createUser(data: UserCreate) {
     const client = await pool.connect();
@@ -15,11 +15,15 @@ export class UserService {
       const hashedPassword = await bcrypt.hash(data.password, saltRounds);
 
       let finalStatus = data.status || "PENDING";
-      // જો ડેટાબેઝમાં ડાયરેક્ટ સપર-એડમિન ક્રિએટ કરવો હોય તો ઓટોમેટિક APPROVED થશે
       if (data.username === "super-admin") {
         finalStatus = "APPROVED";
       }
 
+      // 👑 જો ફ્રન્ટએન્ડમાંથી suid ન આવ્યો હોય, તો આ ટેકનિકથી ૬ આંકડાનો ૧૦૦% નવો અને યુનિક નંબર બનશે
+      // જેમ કે: 221355 ની સીરીઝ જેવો જ કોઈ રેન્ડમ નંબર
+      const generatedSuid = data.suid || Math.floor(100000 + Math.random() * 900000);
+
+      // 🎯 ક્વેરીમાં આપણે ફરી suid અને $1 ઉમેરી દીધા, પણ આ વખતે એ આપણો જનરેટ કરેલો સેફ નંબર હશે
       const query = `
         INSERT INTO users (
           suid, avatar, name, username, password, bod, 
@@ -30,10 +34,10 @@ export class UserService {
         RETURNING suid, avatar, name, username, bod, department_id AS "departmentId", section_id AS "sectionId", standard_id AS "standardId", role_code AS "roleCode", joining_date AS "joiningDate", status;
       `;
 
-      // 🛑 સુધારો: અહીંયાથી data.roleId કાઢી નાખ્યું છે. હવે કુલ 12 વેલ્યુ જ છે.
       const values = [
-        data.suid, data.avatar, data.name, data.username, hashedPassword, data.bod,
-        data.departmentId, data.sectionId, data.standardId, data.roleCode, 
+        generatedSuid, // 👑 આપણો ઓટો-જનરેટેડ યુનિક SUID
+        data.avatar, data.name, data.username, hashedPassword, data.bod,
+        data.departmentId, data.sectionId, data.standardId, data.roleCode,
         data.joiningDate, finalStatus
       ];
 
@@ -47,8 +51,8 @@ export class UserService {
           SET department_head_id = $1 
           WHERE department_id = $2;
         `;
-        await client.query(updateDeptQuery, [data.suid, data.departmentId]);
-        console.log(`🎯 HOD Automation: યુઝર ${data.suid} ને ડિપાર્ટમેન્ટ ${data.departmentId} ના હેડ સેટ કરી દીધા છે.`);
+        await client.query(updateDeptQuery, [newUser.suid, data.departmentId]);
+        console.log(`🎯 HOD Automation: યુઝર ${newUser.suid} ને ડિપાર્ટમેન્ટ ${data.departmentId} ના હેડ સેટ કરી દીધા છે.`);
       }
 
       await client.query('COMMIT');
