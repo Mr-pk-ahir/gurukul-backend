@@ -10,7 +10,8 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "Node"
+    "moduleResolution": "node10",
+    "ignoreDeprecations": "6.0"
   },
   "include": ["start/**/*.ts", "app/**/*.ts"],
   "exclude": ["node_modules", "dist"]

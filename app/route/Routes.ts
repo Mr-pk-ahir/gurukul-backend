@@ -5,13 +5,21 @@ import { RoleController } from "../controller/role-controller";
 import { DepartmentController } from "../controller/department-controller";
 import DashboardController from "../controller/dashboard-controller";
 import { SectionController } from "../controller/section-controller"; // 👑 નવો ઇમ્પોર્ટ
+import { OverviewController } from "../controller/overview-controller"; 
+import amrutAachamanController, { uploadImage } from '../controller/amrut-aachaman-controller';
 
 const router = Router();
 const userController = new UserController();
 const roleController = new RoleController(); 
 const departmentController = new DepartmentController();
+const overviewController = new OverviewController();
 const dashboardController = new DashboardController();
 const sectionController = new SectionController(); // 👑 નવો ઇન્સ્ટન્સ
+
+router.get("/overview", overviewController.getOverview.bind(overviewController));
+router.post("/overview/update", overviewController.updateOverview.bind(overviewController));
+router.post('/amrut-aachaman', uploadImage.single('image'), amrutAachamanController.create);
+router.get('/amrut-aachaman', amrutAachamanController.getAll);
 
 
 router.post("/users/register", userController.registerUser.bind(userController));
