@@ -74,7 +74,7 @@ export const requirePermission = (moduleName: string, action: "create" | "edit" 
             const hasAccess = userPermissions[moduleName][action];
 
             if (hasAccess) {
-                next(); // પરમિશન છે, આગળ વધવા દો!
+                next();
             } else {
                 return res.status(403).json({ 
                     success: false, 

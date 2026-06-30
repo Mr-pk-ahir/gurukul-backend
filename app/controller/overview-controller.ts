@@ -27,14 +27,8 @@ export class OverviewController {
         }
     }
 
-    // POST API: એડમિન પેનલથી આવતો નવો ડેટા સેવ/અપડેટ કરવા માટે
     public async updateOverview(req: Request, res: Response): Promise<void> {
         try {
-            /* 
-               નોંધ: અત્યારે આપણે માની લઈએ છીએ કે ઈમેજની ફાઈનલ URLs req.body માં આવી રહી છે.
-               જ્યારે તમે ફાઈલ અપલોડ (Multer/Cloudinary) ઉમેરશો, ત્યારે જો ઈમેજ ફાઈલ તરીકે આવે 
-               તો req.files માંથી પાથ કાઢીને અહી સેટ કરવો પડશે.
-            */
             const { heroSlider, featureImage, smartInfrastructure } = req.body;
 
             const updatedData = await this.overviewService.updateOverviewData({

@@ -4,7 +4,6 @@ import bcrypt from "bcrypt";
 
 export class UserService {
 
-  // 📝 ૧. નવો યુઝર રજીસ્ટર/ક્રિએટ કરવા માટે
   public async createUser(data: UserCreate) {
     const client = await pool.connect();
 
@@ -19,11 +18,8 @@ export class UserService {
         finalStatus = "APPROVED";
       }
 
-      // 👑 જો ફ્રન્ટએન્ડમાંથી suid ન આવ્યો હોય, તો આ ટેકનિકથી ૬ આંકડાનો ૧૦૦% નવો અને યુનિક નંબર બનશે
-      // જેમ કે: 221355 ની સીરીઝ જેવો જ કોઈ રેન્ડમ નંબર
       const generatedSuid = data.suid || Math.floor(100000 + Math.random() * 900000);
 
-      // 🎯 ક્વેરીમાં આપણે ફરી suid અને $1 ઉમેરી દીધા, પણ આ વખતે એ આપણો જનરેટ કરેલો સેફ નંબર હશે
       const query = `
         INSERT INTO users (
           suid, avatar, name, username, password, bod, 
