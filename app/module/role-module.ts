@@ -10,7 +10,7 @@ export interface ModulePermissions {
 }
 
 export interface RoleCreate {
-    roleId?: number; // ક્રિએટ કરતી વખતે ઓપ્શનલ રાખ્યો છે
+    roleId?: number;
     roleName: string;
     roleCode: string;
     description?: string;
