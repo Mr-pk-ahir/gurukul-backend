@@ -1,45 +1,31 @@
-import { pool } from "../db/database";
-
 export interface SectionRow {
     section_id: number;
     name: string;
-    department_id: number;
     description: string | null;
-    created_at: Date;
-    updated_at: Date;
+    department_id: number;
     department_name?: string;
+    section_head_id: number | null;
+    head_name?: string | null;
+    created_at: string;
+    updated_at: string;
 }
 
-export class SectionModule {
-    static async create(name: string, departmentId: number, description?: string): Promise<SectionRow> {
-        const query = `
-            INSERT INTO sections (name, department_id, description) 
-            VALUES ($1, $2, $3) 
-            RETURNING *;
-        `;
-        const result = await pool.query(query, [name, departmentId, description || null]);
-        return result.rows[0];
-    }
-
-    static async getAll(): Promise<SectionRow[]> {
-        const query = `
-            SELECT s.*, d.department_name 
-            FROM sections s
-            LEFT JOIN departments d ON s.department_id = d.department_id
-            ORDER BY s.section_id ASC;
-        `;
-        const result = await pool.query(query);
-        return result.rows;
-    }
-
-    static async getById(sectionId: number): Promise<SectionRow | null> {
-        const query = `
-            SELECT s.*, d.department_name 
-            FROM sections s
-            LEFT JOIN departments d ON s.department_id = d.department_id
-            WHERE s.section_id = $1;
-        `;
-        const result = await pool.query(query, [sectionId]);
-        return result.rows.length ? result.rows[0] : null;
-    }
+export interface ISectionCreate {
+    name: string;
+    departmentId: number;
+    description?: string;
+    sectionHeadId?: number | null;
 }
+
+export interface ISectionUpdate {
+    name?: string;
+    description?: string;
+    sectionHeadId?: number | null;
+}
+
+// 🎯 IMPORTANT: Tamara roles table ma "Section Head" mate je exact role_code
+// che (jem department mate 'HEAD100' / 'DEPARTMENT_HEAD' hato), e ahi update karo.
+// SELECT role_code, role_name FROM roles; run kari ne confirm karo.
+export const ROLE_CODES = {
+    SECTION_HEAD: "SECTION_HEAD", // ⚠️ CHANGE THIS to your actual role_code
+};

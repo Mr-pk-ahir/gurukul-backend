@@ -12,6 +12,6 @@
     "resolveJsonModule": true,
     "moduleResolution": "Node"
   },
-  "include": ["start/**/*.ts", "app/**/*.ts"],
+  "include": ["start/**/*.ts", "app/**/*.ts", "database/generate-hash.ts"],
   "exclude": ["node_modules", "dist"]
 }

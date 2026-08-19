@@ -1,28 +1,31 @@
 import { ModulePermissions } from "./role-module";
 
+export type UserStatus = "PENDING" | "APPROVED";
+
 export interface UserCreate {
-    suid: number;
-    avatar: string;
+    suid?: number;
+    avatar?: string;
     name: string;
     username: string;
     password: string;
     bod: string;
-    departmentId: number; 
-    sectionId: number;    
-    standardId: number;   
-    roleId: number;       
-    roleCode: string;     
+    departmentId: number;
+    sectionId: number;
+    standardId: number;
+    roleCode: string;
     joiningDate: string;
-    status?: "PENDING" | "APPROVED"; 
+    status?: UserStatus;
 }
 
 export interface AuthUserResponse {
-    suid: number; 
+    suid: number;
     name: string;
     username: string;
     avatar: string;
+    bod: string;              // 🆕 add karyu
+    joiningDate: string;      // 🆕 add karyu
     roleName: string;
     roleCode: string;
-    departmentId: number;
+    departmentId: number | null;
     permissions: ModulePermissions;
 }

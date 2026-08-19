@@ -28,7 +28,9 @@ app.use(cors({
 connectDB();
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-app.use(express.json());
+// 🎯 FIX: default 100kb limit ne vadhari ne 10mb kari (avatar base64 mate)
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 app.use("/", routes);
 

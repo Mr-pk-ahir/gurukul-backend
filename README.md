@@ -42,24 +42,22 @@ cp .env.example .env
 ```
 Pachi `.env` ma `DATABASE_URL` ane `JWT_SECRET` bharo.
 
-### 4. Table banavo
-`database/schema.sql` file nu content Neon console ma (SQL editor) ja paste karo ane run karo. Aathi `users` table ban jashe.
-
-Test mate ek user manually insert karo (password hash karine):
-```sql
--- password "test1234" nu bcrypt hash (example) - 
--- actual ma signup route banya pachi aa automatic thashe
-INSERT INTO users (username, password) VALUES ('raj123', '$2b$10$xxxxxxxxxxxxxxxxxxxxxx');
+### 4. Database migrate ane seed karo
+```bash
+npm run db:setup
 ```
-> Have signup route nathi banyo, etle abhi user manually j insert karvo padshe. bcrypt hash banavva mate Node.js console ma:
-> ```js
-> const bcrypt = require("bcrypt");
-> bcrypt.hash("test1234", 10).then(console.log);
-> ```
+
+Aa command `database/init-schema.sql` ane `database/seed-data.sql` run kare chhe. Aathi modules, roles, departments, sections, users ane default super-admin user ban jashe.
 
 ### 5. Server chalu karo
 ```bash
 npm run dev
+```
+
+### Optional commands
+```bash
+npm run db:migrate
+npm run db:seed
 ```
 
 ## API

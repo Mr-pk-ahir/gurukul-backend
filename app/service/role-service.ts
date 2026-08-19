@@ -1,5 +1,3 @@
-// 📂 ફાઈલ પાથ: app/service/role-service.ts
-
 import { pool } from "../db/database";
 import { RoleCreate, ModulePermissions } from "../module/role-module";
 
@@ -12,8 +10,6 @@ export class RoleService {
                 VALUES ($1, $2, $3, $4)
                 RETURNING role_id, role_name, role_code, description, permissions, created_at;
             `;
-
-            // PostgreSQL માં JSONB કોલમ માટે ઓબ્જેક્ટને JSON String માં ફેરવવો પડે
             const values = [
                 roleData.roleName,
                 roleData.roleCode,
@@ -31,15 +27,6 @@ export class RoleService {
 
     public static async getRolePermissions(roleCode: string): Promise<ModulePermissions | null> {
         try {
-            // સુપર એડમિન માટે ડાયરેક્ટ ઓલ-એક્સેસ બાયપાસ બાય-ડિફોલ્ટ રિટર્ન
-            if (roleCode === "ROLE_SUPER_ADMIN") {
-                return {
-                    "Users": { create: true, edit: true, view: true, delete: true },
-                    "Department": { create: true, edit: true, view: true, delete: true },
-                    "Roles & Permissions": { create: true, edit: true, view: true, delete: true }
-                };
-            }
-
             const query = `SELECT permissions FROM roles WHERE role_code = $1;`;
             const result = await pool.query(query, [roleCode]);
 

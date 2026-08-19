@@ -11,6 +11,8 @@ export const login = async (req: Request, res: Response) => {
 
     const result = await loginUser(username, password);
 
+    console.log(result);
+    
     if (!result.success) {
       return res.status(401).json({ message: result.message });
     }

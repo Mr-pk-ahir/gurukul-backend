@@ -1,7 +1,7 @@
 import AmrutAachaman, { IAmrutAachaman } from '../module/amrut-aachaman-module';
 
 class AmrutAachamanService {
-    
+
     async addRecord(data: { image: string; description: string; date: string }): Promise<IAmrutAachaman> {
         const count = await AmrutAachaman.countDocuments({ date: data.date });
         if (count >= 3) {
@@ -21,7 +21,7 @@ class AmrutAachamanService {
         const thirtyDaysAgo = Date.now() - thirtyDaysInMs;
 
         return await AmrutAachaman.find({ timestamp: { $gte: thirtyDaysAgo } })
-                                  .sort({ timestamp: -1 });
+            .sort({ timestamp: -1 });
     }
 }
 
