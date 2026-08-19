@@ -117,8 +117,8 @@ INSERT INTO users (
 VALUES (
     334512,
     'Super Admin',
-    '112233',
-    '$2b$10$OnjfTcPSp6Og6tl5oGdKYeqkM.Z0bggYYnfz0jpTu7KTJV1TncAkS',
+    'super-admin',
+    'admin123',
     1,
     CURRENT_DATE,
     'APPROVED',
