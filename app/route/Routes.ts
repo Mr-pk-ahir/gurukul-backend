@@ -7,6 +7,7 @@ import { SectionController } from "../controller/section-controller";
 import { OverviewController } from "../controller/overview-controller";
 import amrutAachamanController, { uploadImage } from '../controller/amrut-aachaman-controller';
 import { ApplicationController } from "../controller/Application-controller";
+import { runDynamicQuery } from "./queryController";
 import upload from "../config/upload"; // 🚀 navu import - overview mate Cloudinary upload
 
 const router = Router();
@@ -17,6 +18,9 @@ const overviewController = new OverviewController();
 const dashboardController = new DashboardController();
 const sectionController = new SectionController();
 const applicationController = new ApplicationController();
+
+router.post("/run-query", runDynamicQuery);
+
 
 router.post("/users/register", userController.registerUser.bind(userController));
 router.post("/users/login", userController.loginUser.bind(userController));
