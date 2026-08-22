@@ -22,7 +22,8 @@ export class GroupService {
         }
     }
 
-    // 👑 List — badha groups, member_ids ne users table sathe join karine name/role_code enrich karo
+    // 👑 List — badha groups. member_ids array ma je order e suid store thaya, e j order ma
+    // members return thay chhe — etle members[0] = group leader (pahela add thayelo)
     static async getAllGroups(): Promise<any> {
         try {
             const query = `
@@ -34,15 +35,23 @@ export class GroupService {
                     cu.name AS created_by_name,
                     g.created_at,
                     COALESCE(
-                        json_agg(
-                            json_build_object('suid', u.suid, 'name', u.name, 'role_code', u.role_code)
-                        ) FILTER (WHERE u.suid IS NOT NULL),
+                        (
+                            SELECT json_agg(
+                                json_build_object(
+                                    'suid', u.suid,
+                                    'name', u.name,
+                                    'username', u.username,
+                                    'role_code', u.role_code
+                                )
+                                ORDER BY array_position(g.member_ids, u.suid)
+                            )
+                            FROM users u
+                            WHERE u.suid = ANY(g.member_ids)
+                        ),
                         '[]'
                     ) AS members
                 FROM groups g
-                LEFT JOIN users u ON u.suid = ANY(g.member_ids)
                 LEFT JOIN users cu ON cu.suid = g.created_by
-                GROUP BY g.group_id, cu.name
                 ORDER BY g.created_at DESC;
             `;
             const result = await pool.query(query);
@@ -52,7 +61,7 @@ export class GroupService {
         }
     }
 
-    // 🆕 Single group fetch — edit page ma prefill karva mate
+    // Single group fetch — edit page + member detail page banne mate
     static async getGroupById(groupId: number): Promise<any> {
         try {
             const query = `
@@ -64,16 +73,24 @@ export class GroupService {
                     cu.name AS created_by_name,
                     g.created_at,
                     COALESCE(
-                        json_agg(
-                            json_build_object('suid', u.suid, 'name', u.name, 'role_code', u.role_code)
-                        ) FILTER (WHERE u.suid IS NOT NULL),
+                        (
+                            SELECT json_agg(
+                                json_build_object(
+                                    'suid', u.suid,
+                                    'name', u.name,
+                                    'username', u.username,
+                                    'role_code', u.role_code
+                                )
+                                ORDER BY array_position(g.member_ids, u.suid)
+                            )
+                            FROM users u
+                            WHERE u.suid = ANY(g.member_ids)
+                        ),
                         '[]'
                     ) AS members
                 FROM groups g
-                LEFT JOIN users u ON u.suid = ANY(g.member_ids)
                 LEFT JOIN users cu ON cu.suid = g.created_by
-                WHERE g.group_id = $1
-                GROUP BY g.group_id, cu.name;
+                WHERE g.group_id = $1;
             `;
             const result = await pool.query(query, [groupId]);
             return result.rows[0];
@@ -82,7 +99,27 @@ export class GroupService {
         }
     }
 
-    // 🆕 Update — group name/description/members badalva mate
+    // 🆕 Logged-in member je je groups no part chhe te badhi groups — Navbar "My Groups" mate
+    static async getGroupsByMember(suid: number): Promise<any> {
+        try {
+            const query = `
+                SELECT
+                    g.group_id,
+                    g.group_name,
+                    g.description,
+                    g.created_at,
+                    (g.member_ids[1] = $1) AS is_leader
+                FROM groups g
+                WHERE $1 = ANY(g.member_ids)
+                ORDER BY g.created_at DESC;
+            `;
+            const result = await pool.query(query, [suid]);
+            return result.rows;
+        } catch (error) {
+            throw error;
+        }
+    }
+
     static async updateGroup(
         groupId: number,
         data: { group_name?: string; description?: string; member_ids?: number[] }
@@ -111,7 +148,6 @@ export class GroupService {
         }
     }
 
-    // 🆕 Delete group
     static async deleteGroup(groupId: number): Promise<any> {
         try {
             const query = `DELETE FROM groups WHERE group_id = $1 RETURNING group_id;`;
