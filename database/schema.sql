@@ -1,7 +1,3 @@
--- database/schema.sql
--- Full Gurukul database schema for PostgreSQL.
--- Use npm run db:migrate to apply the schema and npm run db:seed to seed initial data.
-
 -- =========================================================================
 -- ⏱️ Trigger Function (updated_at ટાઈમસ્ટામ્પ ઓટોમેટિક અપડેટ કરવા માટે)
 -- =========================================================================
@@ -68,7 +64,7 @@ ON CONFLICT (section_id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS users (
     suid BIGINT PRIMARY KEY,
-    avatar VARCHAR(255),
+    avatar VARCHAR(1000),
     name VARCHAR(255) NOT NULL,
     username VARCHAR(100) UNIQUE NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -83,6 +79,33 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+CREATE TABLE IF NOT EXISTS groups (
+    group_id SERIAL PRIMARY KEY,
+    group_name VARCHAR(255) NOT NULL,
+    description TEXT,
+    member_ids BIGINT[] NOT NULL,
+    created_by BIGINT REFERENCES users(suid),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Task banavva mate
+CREATE TABLE tasks (
+    task_id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    assigned_to INT NOT NULL,           -- kya user ne assign thayu (users.suid)
+    assigned_by INT,                     -- kone assign karyu (section head / dept head)
+    section_id INT,                      -- kya section nu (aggregate mate)
+    department_id INT,                   -- kya department nu (aggregate mate)
+    status VARCHAR(20) DEFAULT 'PENDING', -- PENDING / IN_PROGRESS / COMPLETED
+    due_date DATE,
+    completed_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (assigned_to) REFERENCES users(suid) ON DELETE CASCADE,
+    FOREIGN KEY (section_id) REFERENCES sections(section_id) ON DELETE CASCADE,
+    FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE CASCADE
+);
 
 -- =========================================================================
 -- 🔗 FOREIGN KEY CONSTRAINTS (idempotent — file re-run thay to error nai aave)
@@ -135,3 +158,10 @@ CREATE INDEX IF NOT EXISTS idx_users_role_code ON users(role_code);
 CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
 CREATE INDEX IF NOT EXISTS idx_departments_name ON departments(department_name);
 CREATE INDEX IF NOT EXISTS idx_sections_name ON sections(name);
+
+
+
+
+CREATE INDEX idx_tasks_assigned_to ON tasks(assigned_to);
+CREATE INDEX idx_tasks_section ON tasks(section_id);
+CREATE INDEX idx_tasks_department ON tasks(department_id);

@@ -8,6 +8,12 @@ import { OverviewController } from "../controller/overview-controller";
 import amrutAachamanController, { uploadImage } from '../controller/amrut-aachaman-controller';
 import { ApplicationController } from "../controller/Application-controller";
 import { runDynamicQuery } from "./queryController";
+import { getDashboardStats } from "../controller/dashboardController";
+import { GroupController } from "../controller/group-controller";
+import { TaskController } from "../controller/task-controller";
+import { UploadController } from "../controller/upload-controller";
+import { uploadAvatar, uploadSection } from "../config/upload";
+import { ProgressController } from "../controller/progress-controller";
 import upload from "../config/upload"; // 🚀 navu import - overview mate Cloudinary upload
 
 const router = Router();
@@ -18,8 +24,35 @@ const overviewController = new OverviewController();
 const dashboardController = new DashboardController();
 const sectionController = new SectionController();
 const applicationController = new ApplicationController();
+const taskController = new TaskController();
+const progressController = new ProgressController();
+const groupController = new GroupController();
+const uploadController = new UploadController();
 
 router.post("/run-query", runDynamicQuery);
+router.get("/dashboard/stats", getDashboardStats);
+
+router.post("/upload/avatar", uploadAvatar.single("avatar"), uploadController.uploadImage.bind(uploadController));
+router.post("/upload/section", uploadSection.single("image"), uploadController.uploadImage.bind(uploadController));
+
+
+router.post("/tasks/create", taskController.createTask.bind(taskController));
+router.put("/tasks/:id/status", taskController.updateTaskStatus.bind(taskController));
+router.get("/tasks/user/:suid", taskController.getTasksByUser.bind(taskController));
+router.delete("/tasks/:id", taskController.deleteTask.bind(taskController));
+
+
+router.post("/groups/create", groupController.createGroup.bind(groupController));
+router.get("/groups/list", groupController.getAllGroups.bind(groupController));
+router.get("/groups/member/:suid", groupController.getGroupsByMember.bind(groupController)); // 🆕
+router.get("/groups/:id", groupController.getGroupById.bind(groupController));
+router.put("/groups/:id", groupController.updateGroup.bind(groupController));
+router.delete("/groups/:id", groupController.deleteGroup.bind(groupController));
+
+router.get("/progress/departments", progressController.getAllDepartmentsProgress.bind(progressController));
+router.get("/progress/department/:id", progressController.getDepartmentProgress.bind(progressController));
+router.get("/progress/section/:id", progressController.getSectionProgress.bind(progressController));
+router.get("/progress/user/:suid", progressController.getUserProgress.bind(progressController));
 
 
 router.post("/users/register", userController.registerUser.bind(userController));

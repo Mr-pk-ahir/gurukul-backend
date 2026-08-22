@@ -104,6 +104,29 @@ ON CONFLICT (role_code) DO UPDATE SET
     description = EXCLUDED.description,
     permissions = EXCLUDED.permissions;
 
+
+-- 🎯 SUPER_ADMIN — Group module ni badhi permissions true
+UPDATE roles
+SET permissions = permissions || '{"Group": {"edit": true, "view": true, "create": true, "delete": true}}'::jsonb
+WHERE role_code = 'SUPER_ADMIN';
+
+-- 🎯 HEAD100 (department head) — Group module ni create + view true
+UPDATE roles
+SET permissions = permissions || '{"Group": {"edit": false, "view": true, "create": true, "delete": false}}'::jsonb
+WHERE role_code = 'HEAD100';
+
+-- ⚠️ SECHEAD101, STUDENT, USER — Group access NATHI joiti, explicit false rakhyu
+UPDATE roles
+SET permissions = permissions || '{"Group": {"edit": false, "view": false, "create": false, "delete": false}}'::jsonb
+WHERE role_code = 'SECHEAD101';
+
+UPDATE roles
+SET permissions = permissions || '{"Group": {"edit": false, "view": false, "create": false, "delete": false}}'::jsonb
+WHERE role_code = 'USER';
+
+UPDATE roles
+SET permissions = permissions || '{"Group": {"edit": false, "view": false, "create": false, "delete": false}}'::jsonb
+WHERE role_code = 'STUDENT';
 INSERT INTO users (
     suid,
     name,

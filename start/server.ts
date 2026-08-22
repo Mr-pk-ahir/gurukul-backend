@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import cors from "cors";
 import routes from "../app/route/Routes";
 import { connectDB } from "../app/db/database";
-import { executeSqlFile } from "../app/db/runMigrations";
 
 dotenv.config();
 
@@ -26,18 +25,12 @@ app.use(cors({
   credentials: true
 }));
 
-// 🎯 FIX: connectDB() pehla be vaar call thatu hatu (ek .then() sathe, ek plain) — duplicate hatu, kadhi nakhyu.
-// 🎯 FIX: filenames actual /database folder na files sathe match karta karya (init-schema.sql / seed-data.sql exist j nahota).
-connectDB().then(async () => {
-    await executeSqlFile("schema.sql");
-    await executeSqlFile("Default_Data.sql");
-});
-
+connectDB();
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-// 🎯 FIX: default 100kb limit ne vadhari ne 10mb kari (avatar base64 mate)
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+// 🎯 FIX: Limit vadhari — 10mb thi 20mb kari (bulk data, large forms, future file-related JSON mate safe margin)
+app.use(express.json({ limit: "60mb" }));
+app.use(express.urlencoded({ extended: true, limit: "60mb" }));
 
 app.use("/", routes);
 
