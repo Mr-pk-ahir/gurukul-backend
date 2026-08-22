@@ -1,6 +1,8 @@
 // app/db/database.ts
 import { Pool } from "pg";
 import dotenv from "dotenv";
+import fs from "fs";
+import path from "path";
 
 dotenv.config();
 
@@ -34,5 +36,19 @@ export const connectDB = async (): Promise<void> => {
     } catch (error: any) {
         console.error("Database Connection Error:", error.message);
         process.exit(1);
+    }
+};
+
+// 🆕 database/ folder ma thi .sql file read karine pool par execute kare chhe
+// app/db/database.ts thi database/ folder root ma chhe -> "../../database"
+export const executeSqlFile = async (fileName: string): Promise<void> => {
+    try {
+        const filePath = path.join(__dirname, "../../database", fileName);
+        const sql = fs.readFileSync(filePath, "utf-8");
+        await pool.query(sql);
+        console.log(`✅ ${fileName} safaltapoorvak run thayu`);
+    } catch (error: any) {
+        console.error(`❌ ${fileName} run karva ma error:`, error.message);
+        throw error;
     }
 };

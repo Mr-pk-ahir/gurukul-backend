@@ -28,7 +28,6 @@ app.use(cors({
 connectDB();
 app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
 
-// 🎯 FIX: Limit vadhari — 10mb thi 20mb kari (bulk data, large forms, future file-related JSON mate safe margin)
 app.use(express.json({ limit: "60mb" }));
 app.use(express.urlencoded({ extended: true, limit: "60mb" }));
 
