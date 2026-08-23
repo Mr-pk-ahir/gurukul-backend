@@ -20,7 +20,6 @@ export interface GroupedOverviewData {
     smartInfrastructure: string[];
 }
 
-// module/overview-module.ts ma add karo
 export interface OverviewImageWithId {
     id: number;
     url: string;

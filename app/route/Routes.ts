@@ -12,9 +12,12 @@ import { getDashboardStats } from "../controller/dashboardController";
 import { GroupController } from "../controller/group-controller";
 import { TaskController } from "../controller/task-controller";
 import { UploadController } from "../controller/upload-controller";
-import { uploadAvatar, uploadSection } from "../config/upload";
+import { uploadAvatar, uploadSection, uploadDailyDarshan } from "../config/upload"; // 🎯 FIX: uploadDailyDarshan add karyu
+import quoteController from "../controller/quote-controller";
+import { uploadQuote } from "../config/upload";
 import { ProgressController } from "../controller/progress-controller";
-import upload from "../config/upload"; // 🚀 navu import - overview mate Cloudinary upload
+import { DailyDarshanController } from "../controller/dailyDarshan-Controller";
+import upload from "../config/upload"; // 🚀 overview mate Cloudinary upload
 
 const router = Router();
 const userController = new UserController();
@@ -22,6 +25,7 @@ const roleController = new RoleController();
 const departmentController = new DepartmentController();
 const overviewController = new OverviewController();
 const dashboardController = new DashboardController();
+const dailyDarshanController = new DailyDarshanController();
 const sectionController = new SectionController();
 const applicationController = new ApplicationController();
 const taskController = new TaskController();
@@ -41,10 +45,19 @@ router.put("/tasks/:id/status", taskController.updateTaskStatus.bind(taskControl
 router.get("/tasks/user/:suid", taskController.getTasksByUser.bind(taskController));
 router.delete("/tasks/:id", taskController.deleteTask.bind(taskController));
 
+router.post("/quotes/create", uploadQuote.single("image"), quoteController.createQuote.bind(quoteController));
+router.get("/quotes/type/:type", quoteController.getQuotesByType.bind(quoteController));
+router.delete("/quotes/:id", quoteController.deleteQuote.bind(quoteController));
+
+// 🎯 FIX: upload (default = uploadOverview) na badle uploadDailyDarshan vaparyu —
+// have image "gurukul/daily-darshan" folder ma save thashe, "gurukul/overview" ma nahi
+router.post("/daily-darshan", uploadDailyDarshan.single("image"), dailyDarshanController.create);
+router.get("/daily-darshan", dailyDarshanController.getAll);
+router.delete("/daily-darshan/:id", dailyDarshanController.deleteById);
 
 router.post("/groups/create", groupController.createGroup.bind(groupController));
 router.get("/groups/list", groupController.getAllGroups.bind(groupController));
-router.get("/groups/member/:suid", groupController.getGroupsByMember.bind(groupController)); // 🆕
+router.get("/groups/member/:suid", groupController.getGroupsByMember.bind(groupController));
 router.get("/groups/:id", groupController.getGroupById.bind(groupController));
 router.put("/groups/:id", groupController.updateGroup.bind(groupController));
 router.delete("/groups/:id", groupController.deleteGroup.bind(groupController));
@@ -67,8 +80,8 @@ router.put("/users/approve/:id", userController.approveUser.bind(userController)
 router.get("/dashboard", dashboardController.getDashboard.bind(dashboardController));
 
 router.get("/overview", overviewController.getOverview.bind(overviewController));
-router.post("/overview/update", upload.single("image"), overviewController.updateOverview.bind(overviewController)); // 🚀 upload middleware add karyu
-router.delete("/overview/:id", overviewController.deleteOverviewImage.bind(overviewController)); // 🚀 navu route
+router.post("/overview/update", upload.single("image"), overviewController.updateOverview.bind(overviewController));
+router.delete("/overview/:id", overviewController.deleteOverviewImage.bind(overviewController));
 
 router.get("/departments", departmentController.getAllDepartments.bind(departmentController));
 router.post("/departments/create", departmentController.createDepartment.bind(departmentController));
@@ -78,9 +91,9 @@ router.delete("/departments/delete/:id", departmentController.deleteDepartment.b
 
 
 router.post("/sections/create", sectionController.createSection.bind(sectionController));
-router.put("/sections/update/:id", sectionController.updateSection.bind(sectionController)); // 🆕 add
+router.put("/sections/update/:id", sectionController.updateSection.bind(sectionController));
 router.get("/sections", sectionController.getSections.bind(sectionController));
-router.get("/sections/department/:departmentId", sectionController.getSectionsByDepartment.bind(sectionController)); // 🆕 add
+router.get("/sections/department/:departmentId", sectionController.getSectionsByDepartment.bind(sectionController));
 router.get("/sections/:id", sectionController.getSectionById.bind(sectionController));
 router.delete("/sections/:id", sectionController.deleteSection.bind(sectionController));
 

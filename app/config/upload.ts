@@ -1,4 +1,5 @@
 import multer from "multer";
+
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "./cloudinary";
 
@@ -31,6 +32,8 @@ export function createUploader(folderName: string) {
 export const uploadAvatar = createUploader("avatars");
 export const uploadOverview = createUploader("overview");
 export const uploadSection = createUploader("sections");
+export const uploadQuote = createUploader("quotes"); // 🆕 Activities + Events mate
+export const uploadDailyDarshan = createUploader("daily-darshan"); // 🆕 NAVU: Daily Darshan mate alag Cloudinary folder
 
 // Default export — jem tamaru existing "../config/upload" import karyu che (Routes.ts ma "upload.single")
 export default uploadOverview;

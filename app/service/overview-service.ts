@@ -3,9 +3,8 @@ import cloudinary from "../config/cloudinary";
 import {
     OverviewImageRow,
     SectionType,
-    GroupedOverviewData,
-    validSections,
     GroupedOverviewDataWithId,
+    validSections,
 } from "../module/overview-module";
 
 export class OverviewService {
@@ -52,7 +51,17 @@ export class OverviewService {
             throw new Error("Image not found");
         }
 
-        await cloudinary.uploader.destroy(image.public_id);
+        // 🎯 FIX: Default/seed images (public_id "SEED-" thi start thay che) Cloudinary par
+        // actual exist j nathi karta — e case ma cloudinary.destroy() error throw kare che
+        // ane pura delete flow crash thai jay che. Etle e ne try-catch ma wrap karyu —
+        // Cloudinary delete fail thay to pan DB row delete thavu joie j.
+        if (!image.public_id.startsWith("SEED-")) {
+            try {
+                await cloudinary.uploader.destroy(image.public_id);
+            } catch (cloudinaryError) {
+                console.error("⚠️ Cloudinary delete failed (DB delete continue thashe):", cloudinaryError);
+            }
+        }
 
         const deleted = await pool.query(
             `DELETE FROM overview_images WHERE id = $1 RETURNING *`,

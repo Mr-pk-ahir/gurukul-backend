@@ -1,3 +1,7 @@
+-- database/schema.sql
+-- Full Gurukul database schema for PostgreSQL.
+-- Use npm run migration:run to apply the schema + seed, npm run migration:flesh to drop everything.
+
 -- =========================================================================
 -- ⏱️ Trigger Function (updated_at ટાઈમસ્ટામ્પ ઓટોમેટિક અપડેટ કરવા માટે)
 -- =========================================================================
@@ -90,7 +94,7 @@ CREATE TABLE IF NOT EXISTS groups (
 );
 
 -- Task banavva mate
-CREATE TABLE tasks (
+CREATE TABLE IF NOT EXISTS tasks (
     task_id SERIAL PRIMARY KEY,
     title VARCHAR(255) NOT NULL,
     description TEXT,
@@ -106,6 +110,50 @@ CREATE TABLE tasks (
     FOREIGN KEY (section_id) REFERENCES sections(section_id) ON DELETE CASCADE,
     FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS overview_images (
+    id SERIAL PRIMARY KEY,
+    section VARCHAR(50) NOT NULL CHECK (section IN ('heroSlider', 'featureImage', 'smartInfrastructure')),
+    url TEXT NOT NULL,
+    public_id VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS quotes (
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(20) NOT NULL CHECK (type IN ('activity', 'event')),
+    image_url TEXT NOT NULL,
+    public_id VARCHAR(255) NOT NULL,
+    description TEXT,
+    event_date DATE NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_quotes_type ON quotes(type);
+CREATE INDEX IF NOT EXISTS idx_quotes_date ON quotes(event_date);
+
+-- =========================================================================
+-- 🌅 DAILY DARSHAN TABLE — Amrut Nu Aachaman ni j pattern follow kari
+-- =========================================================================
+
+-- =========================================================================
+-- 🌅 DAILY DARSHAN TABLE — Amrut Nu Aachaman ni j pattern follow kari
+-- =========================================================================
+
+CREATE TABLE IF NOT EXISTS daily_darshan (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    image_url VARCHAR(500) NOT NULL,
+    description TEXT,
+    date DATE NOT NULL DEFAULT CURRENT_DATE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+DROP TRIGGER IF EXISTS update_daily_darshan_modtime ON daily_darshan;
+CREATE TRIGGER update_daily_darshan_modtime BEFORE UPDATE ON daily_darshan FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
+
+CREATE INDEX IF NOT EXISTS idx_daily_darshan_date ON daily_darshan(date);
 
 -- =========================================================================
 -- 🔗 FOREIGN KEY CONSTRAINTS (idempotent — file re-run thay to error nai aave)
@@ -158,10 +206,8 @@ CREATE INDEX IF NOT EXISTS idx_users_role_code ON users(role_code);
 CREATE INDEX IF NOT EXISTS idx_users_status ON users(status);
 CREATE INDEX IF NOT EXISTS idx_departments_name ON departments(department_name);
 CREATE INDEX IF NOT EXISTS idx_sections_name ON sections(name);
+CREATE INDEX IF NOT EXISTS idx_overview_images_section ON overview_images(section);
 
-
-
-
-CREATE INDEX idx_tasks_assigned_to ON tasks(assigned_to);
-CREATE INDEX idx_tasks_section ON tasks(section_id);
-CREATE INDEX idx_tasks_department ON tasks(department_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned_to ON tasks(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_tasks_section ON tasks(section_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_department ON tasks(department_id);
