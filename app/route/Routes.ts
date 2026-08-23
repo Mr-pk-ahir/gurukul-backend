@@ -53,6 +53,7 @@ router.delete("/quotes/:id", quoteController.deleteQuote.bind(quoteController));
 // have image "gurukul/daily-darshan" folder ma save thashe, "gurukul/overview" ma nahi
 router.post("/daily-darshan", uploadDailyDarshan.single("image"), dailyDarshanController.create);
 router.get("/daily-darshan", dailyDarshanController.getAll);
+router.put("/daily-darshan/:id", uploadDailyDarshan.single("image"), dailyDarshanController.update);
 router.delete("/daily-darshan/:id", dailyDarshanController.deleteById);
 
 router.post("/groups/create", groupController.createGroup.bind(groupController));
@@ -85,6 +86,7 @@ router.delete("/overview/:id", overviewController.deleteOverviewImage.bind(overv
 
 router.get("/departments", departmentController.getAllDepartments.bind(departmentController));
 router.post("/departments/create", departmentController.createDepartment.bind(departmentController));
+router.put("/departments/:id", departmentController.updateDepartment.bind(departmentController));
 router.get("/departments/:id", departmentController.getDepartmentById.bind(departmentController));
 router.get("/departments/:id/users", departmentController.getUsersByDepartment.bind(departmentController));
 router.delete("/departments/delete/:id", departmentController.deleteDepartment.bind(departmentController));
@@ -99,6 +101,7 @@ router.delete("/sections/:id", sectionController.deleteSection.bind(sectionContr
 
 router.post("/roles/create", roleController.createRole.bind(roleController));
 router.get("/roles", roleController.getAllRoles.bind(roleController));
+router.put("/roles/:roleCode", roleController.updateRole.bind(roleController));
 
 router.post("/applications/create", applicationController.createApplication.bind(applicationController));
 router.get("/applications/types", applicationController.getApplicationTypes.bind(applicationController));

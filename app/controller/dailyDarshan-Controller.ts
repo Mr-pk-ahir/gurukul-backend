@@ -44,6 +44,23 @@ export class DailyDarshanController {
         }
     };
 
+    update = async (req: Request, res: Response) => {
+        try {
+            const id = Number(req.params.id);
+            const { title, description, date } = req.body;
+            if (!id || !title) return res.status(400).json({ success: false, message: "Valid id and title are required" });
+
+            const imageUrl = req.file?.path;
+            const row = await this.dailyDarshanService.update(id, title, description || "", date, imageUrl);
+            if (!row) return res.status(404).json({ success: false, message: "Entry not found" });
+
+            return res.json({ success: true, message: "Updated successfully", data: mapDailyDarshanRowToDTO(row as any) });
+        } catch (error: any) {
+            console.error("Daily Darshan update error:", error.message);
+            return res.status(500).json({ success: false, message: "Failed to update daily darshan entry" });
+        }
+    };
+
     // 🎯 DELETE /daily-darshan/:id — Admin management mate
     deleteById = async (req: Request, res: Response) => {
         try {

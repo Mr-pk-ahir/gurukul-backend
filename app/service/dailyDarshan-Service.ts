@@ -34,4 +34,19 @@ export class DailyDarshanService {
         );
         return result.rows[0] || null;
     }
+
+    async update(id: number, title: string, description: string, date: string, imageUrl?: string): Promise<DailyDarshanRow | null> {
+        const result = await pool.query(
+            `UPDATE daily_darshan
+             SET title = $1,
+                 description = $2,
+                 date = $3,
+                 image_url = COALESCE($4, image_url),
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE id = $5
+             RETURNING id, title, image_url, description, TO_CHAR(date, 'YYYY-MM-DD') AS date, created_at`,
+            [title, description, date, imageUrl ?? null, id]
+        );
+        return result.rows[0] || null;
+    }
 }

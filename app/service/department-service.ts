@@ -105,6 +105,26 @@ export class DepartmentService {
         }
     }
 
+    public async updateDepartment(
+        departmentId: number,
+        departmentName?: string,
+        departmentHeadId?: number | null,
+        description?: string
+    ): Promise<DepartmentRow> {
+        const result = await pool.query(
+            `UPDATE departments
+             SET department_name = COALESCE($1, department_name),
+                 department_head_id = $2,
+                 description = COALESCE($3, description),
+                 updated_at = CURRENT_TIMESTAMP
+             WHERE department_id = $4
+             RETURNING *;`,
+            [departmentName || null, departmentHeadId ?? null, description ?? null, departmentId]
+        );
+        if (result.rows.length === 0) throw new Error("ડિપાર્ટમેન્ટ મળ્યો નથી.");
+        return result.rows[0];
+    }
+
     // 5. Get Users by Department (Frontend માં Section Head સિલેક્ટ કરવા માટે)
     public async getUsersByDepartment(departmentId: number): Promise<any[]> {
         try {

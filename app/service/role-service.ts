@@ -54,4 +54,25 @@ export class RoleService {
             throw error;
         }
     }
+
+    public async updateRole(roleCode: string, roleData: RoleCreate): Promise<any> {
+        const query = `
+            UPDATE roles
+            SET role_name = $1,
+                description = $2,
+                permissions = $3,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE role_code = $4
+            RETURNING role_code, role_name, description, permissions, created_at, updated_at;
+        `;
+        const values = [
+            roleData.roleName,
+            roleData.description || null,
+            JSON.stringify(roleData.permissions),
+            roleCode,
+        ];
+        const result = await pool.query(query, values);
+        if (result.rows.length === 0) throw new Error("Role not found.");
+        return result.rows[0];
+    }
 }

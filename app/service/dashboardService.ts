@@ -1,10 +1,57 @@
 import { pool } from "../db/database";
 
 type Range = "week" | "month";
+export type TrendPoint = { label: string; value: number };
 
 // 🎯 range mujab kayla dino/interval no data joie te decide kare
 const getDateTrunc = (range: Range) => (range === "week" ? "day" : "week");
 const getIntervalClause = (range: Range) => (range === "week" ? "7 days" : "30 days");
+
+const trendSource = {
+    departments: { table: "departments", dateColumn: "created_at" },
+    approvedUsers: { table: "users", dateColumn: "created_at" },
+    roles: { table: "roles", dateColumn: "created_at" },
+    pendingUsers: { table: "users", dateColumn: "created_at" },
+} as const;
+
+const allowedTables = new Set(["departments", "users", "roles"]);
+const allowedDateColumns = new Set(["created_at"]);
+
+export async function getCumulativeTrend(
+    table: string,
+    dateColumn: string,
+    range: Range,
+    extraWhereClause?: string,
+    extraParams: unknown[] = []
+): Promise<TrendPoint[]> {
+    if (!allowedTables.has(table) || !allowedDateColumns.has(dateColumn)) {
+        throw new Error("Invalid dashboard trend source");
+    }
+
+    const days = range === "week" ? 7 : 30;
+    const whereClause = extraWhereClause ? `AND ${extraWhereClause}` : "";
+    const result = await pool.query<{ label: string; value: string }>(
+        `WITH date_scaffold AS (
+             SELECT generate_series(
+                 CURRENT_DATE - INTERVAL '${days - 1} days',
+                 CURRENT_DATE,
+                 INTERVAL '1 day'
+             )::date AS day
+         )
+         SELECT TO_CHAR(scaffold.day, 'DD Mon') AS label,
+                (
+                    SELECT COUNT(*)
+                    FROM ${table} source
+                    WHERE source.${dateColumn} < scaffold.day + INTERVAL '1 day'
+                    ${whereClause}
+                )::text AS value
+         FROM date_scaffold scaffold
+         ORDER BY scaffold.day ASC`,
+        extraParams
+    );
+
+    return result.rows.map((row) => ({ label: row.label, value: Number(row.value) }));
+}
 
 const formatChartRows = (rows: { bucket: string; value: string }[]) =>
     rows.map((r) => ({
@@ -15,8 +62,7 @@ const formatChartRows = (rows: { bucket: string; value: string }[]) =>
 export const dashboardService = {
     // 🎯 SUPER ADMIN: system-wide real counts + growth trend + role distribution + recent activity
     async getSuperAdminStats(range: Range) {
-        const trunc = getDateTrunc(range);
-        const interval = getIntervalClause(range);
+        console.log(`[dashboard] getSuperAdminStats range=${range}`);
 
         const [deptCount, userCount, roleCount, pendingCount] = await Promise.all([
             pool.query(`SELECT COUNT(*)::int AS count FROM departments`),
@@ -25,12 +71,13 @@ export const dashboardService = {
             pool.query(`SELECT COUNT(*)::int AS count FROM users WHERE status = 'PENDING'`),
         ]);
 
-        const growth = await pool.query(
-            `SELECT DATE_TRUNC('${trunc}', created_at) AS bucket, COUNT(*)::text AS value
-             FROM users
-             WHERE created_at >= NOW() - INTERVAL '${interval}'
-             GROUP BY bucket ORDER BY bucket ASC`
-        );
+        const [departmentTrend, approvedUserTrend, roleTrend, pendingUserTrend, growth] = await Promise.all([
+            getCumulativeTrend(trendSource.departments.table, trendSource.departments.dateColumn, range),
+            getCumulativeTrend(trendSource.approvedUsers.table, trendSource.approvedUsers.dateColumn, range, "source.status = $1", ["APPROVED"]),
+            getCumulativeTrend(trendSource.roles.table, trendSource.roles.dateColumn, range),
+            getCumulativeTrend(trendSource.pendingUsers.table, trendSource.pendingUsers.dateColumn, range, "source.status = $1", ["PENDING"]),
+            getCumulativeTrend("users", "created_at", range),
+        ]);
 
         // 🎯 Role-wise breakdown — konsa role ma ketla users chhe
         const roleDistribution = await pool.query(
@@ -63,12 +110,12 @@ export const dashboardService = {
 
         return {
             cards: [
-                { label: "Total Departments", value: deptCount.rows[0].count, subLabel: "Active Modules" },
-                { label: "Total Active Users", value: userCount.rows[0].count, subLabel: "Verified Accounts" },
-                { label: "Total System Roles", value: roleCount.rows[0].count, subLabel: "Configured Permissions" },
-                { label: "Pending Approvals", value: pendingCount.rows[0].count, subLabel: "Awaiting review" },
+                { label: "Total Departments", value: deptCount.rows[0].count, subLabel: "Active Modules", trend: departmentTrend },
+                { label: "Total Active Users", value: userCount.rows[0].count, subLabel: "Verified Accounts", trend: approvedUserTrend },
+                { label: "Total System Roles", value: roleCount.rows[0].count, subLabel: "Configured Permissions", trend: roleTrend },
+                { label: "Pending Approvals", value: pendingCount.rows[0].count, subLabel: "Awaiting review", trend: pendingUserTrend },
             ],
-            chart: formatChartRows(growth.rows),
+            chart: growth,
             roleDistribution: roleDistribution.rows.map((r) => ({
                 roleCode: r.role_code,
                 roleName: r.role_name,

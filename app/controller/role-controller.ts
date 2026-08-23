@@ -64,4 +64,23 @@ export class RoleController {
             });
         }
     }
+
+    public async updateRole(req: Request, res: Response): Promise<Response> {
+        try {
+            const roleCode = String(req.params.roleCode || "");
+            const { roleName, description, permissions } = req.body;
+
+            if (!roleCode || !roleName || !permissions) {
+                return res.status(400).json({ success: false, message: "Required fields (roleName, permissions) are missing." });
+            }
+
+            const updatedRole = await roleService.updateRole(roleCode, { roleName, roleCode, description, permissions });
+            return res.status(200).json({ success: true, message: "Role updated successfully!", data: updatedRole });
+        } catch (error: any) {
+            if (error.code === "23505") {
+                return res.status(400).json({ success: false, message: "Role Name already exists." });
+            }
+            return res.status(404).json({ success: false, message: error.message || "Role not found." });
+        }
+    }
 }

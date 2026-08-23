@@ -154,3 +154,74 @@ INSERT INTO overview_images (section, url, public_id) VALUES
 ('heroSlider', 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&q=80&w=1600', 'SEED-hero-2'),
 ('heroSlider', 'https://images.unsplash.com/photo-1616080409883-a96ae084a7e1?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', 'SEED-hero-3')
 ON CONFLICT DO NOTHING;
+
+-- =========================================================================
+-- 🎯 NAVU: 6 missing modules ni permissions badha roles ma add kari
+-- (Progress, MyLessons, Lesson, Group, Activities, UpcomingEvents)
+-- jsonb '||' operator vaparyu chhe — existing permissions ne touch karya vagar
+-- fakt navi keys merge/overwrite thashe. File multiple vaar run karo to safe chhe.
+-- =========================================================================
+
+-- 👑 SUPER_ADMIN — badhi 6 modules ni badhi permissions true
+UPDATE roles
+SET permissions = permissions || '{
+    "Progress": { "edit": true, "view": true, "create": true, "delete": true },
+    "MyLessons": { "edit": true, "view": true, "create": true, "delete": true },
+    "Lesson": { "edit": true, "view": true, "create": true, "delete": true },
+    "Group": { "edit": true, "view": true, "create": true, "delete": true },
+    "Activities": { "edit": true, "view": true, "create": true, "delete": true },
+    "UpcomingEvents": { "edit": true, "view": true, "create": true, "delete": true }
+}'::jsonb
+WHERE role_code = 'SUPER_ADMIN';
+
+
+-- 🏢 HEAD100 (department_head) — Progress/MyLessons view, Lesson+Group create+view, Activities/Events nathi
+UPDATE roles
+SET permissions = permissions || '{
+    "Progress": { "edit": false, "view": true, "create": false, "delete": false },
+    "MyLessons": { "edit": false, "view": true, "create": false, "delete": false },
+    "Lesson": { "edit": false, "view": true, "create": true, "delete": false },
+    "Group": { "edit": false, "view": true, "create": true, "delete": false },
+    "Activities": { "edit": false, "view": false, "create": false, "delete": false },
+    "UpcomingEvents": { "edit": false, "view": false, "create": false, "delete": false }
+}'::jsonb
+WHERE role_code = 'HEAD100';
+
+
+-- 🏫 SECHEAD101 (section_head) — Progress/MyLessons view, Lesson create+view, Group/Activities/Events nathi
+UPDATE roles
+SET permissions = permissions || '{
+    "Progress": { "edit": false, "view": true, "create": false, "delete": false },
+    "MyLessons": { "edit": false, "view": true, "create": false, "delete": false },
+    "Lesson": { "edit": false, "view": true, "create": true, "delete": false },
+    "Group": { "edit": false, "view": false, "create": false, "delete": false },
+    "Activities": { "edit": false, "view": false, "create": false, "delete": false },
+    "UpcomingEvents": { "edit": false, "view": false, "create": false, "delete": false }
+}'::jsonb
+WHERE role_code = 'SECHEAD101';
+
+
+-- 🎓 STUDENT — fakt potani Progress + MyLessons joi shake, baki badhu false
+UPDATE roles
+SET permissions = permissions || '{
+    "Progress": { "edit": false, "view": true, "create": false, "delete": false },
+    "MyLessons": { "edit": false, "view": true, "create": false, "delete": false },
+    "Lesson": { "edit": false, "view": false, "create": false, "delete": false },
+    "Group": { "edit": false, "view": false, "create": false, "delete": false },
+    "Activities": { "edit": false, "view": false, "create": false, "delete": false },
+    "UpcomingEvents": { "edit": false, "view": false, "create": false, "delete": false }
+}'::jsonb
+WHERE role_code = 'STUDENT';
+
+
+-- 👤 USER (basic role) — fakt Progress + MyLessons view, baki badhu false
+UPDATE roles
+SET permissions = permissions || '{
+    "Progress": { "edit": false, "view": true, "create": false, "delete": false },
+    "MyLessons": { "edit": false, "view": true, "create": false, "delete": false },
+    "Lesson": { "edit": false, "view": false, "create": false, "delete": false },
+    "Group": { "edit": false, "view": false, "create": false, "delete": false },
+    "Activities": { "edit": false, "view": false, "create": false, "delete": false },
+    "UpcomingEvents": { "edit": false, "view": false, "create": false, "delete": false }
+}'::jsonb
+WHERE role_code = 'USER';

@@ -5,7 +5,6 @@ export const getDashboardStats = async (req: Request, res: Response) => {
     try {
         const role = String(req.query.role || "");
         const range = req.query.range === "week" ? "week" : "month";
-
         let data;
 
         if (role === "SUPER_ADMIN") {
