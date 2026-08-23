@@ -11,7 +11,8 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:5173",
-  "https://gurukul-flame.vercel.app"
+  "https://gurukul-flame.vercel.app",
+  "https://gurukul-mr-pk-ahirs-projects.vercel.app"
 ];
 
 app.use(cors({
