@@ -116,6 +116,8 @@ CREATE TABLE IF NOT EXISTS overview_images (
     section VARCHAR(50) NOT NULL CHECK (section IN ('heroSlider', 'featureImage', 'smartInfrastructure')),
     url TEXT NOT NULL,
     public_id VARCHAR(255) NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
+    description TEXT NOT NULL DEFAULT '',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -124,10 +126,37 @@ CREATE TABLE IF NOT EXISTS quotes (
     type VARCHAR(20) NOT NULL CHECK (type IN ('activity', 'event')),
     image_url TEXT NOT NULL,
     public_id VARCHAR(255) NOT NULL,
+    title TEXT NOT NULL DEFAULT '',
     description TEXT,
     event_date DATE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    name TEXT NOT NULL DEFAULT '',
+    display_start_date DATE,
+    display_end_date DATE,
+    event_start_date DATE,
+    event_end_date DATE,
+    is_approved VARCHAR(20) DEFAULT 'Pending' CHECK (is_approved IN ('Approved', 'Rejected', 'Pending')),
+    status VARCHAR(20) DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive')),
+    add_to_hero VARCHAR(3) DEFAULT 'No' CHECK (add_to_hero IN ('Yes', 'No'))
 );
+
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS name TEXT;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS display_start_date DATE;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS display_end_date DATE;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS event_start_date DATE;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS event_end_date DATE;
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS is_approved VARCHAR(20) DEFAULT 'Pending';
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'Active';
+ALTER TABLE quotes ADD COLUMN IF NOT EXISTS add_to_hero VARCHAR(3) DEFAULT 'No';
+UPDATE quotes SET name = COALESCE(NULLIF(name, ''), title, 'Untitled event') WHERE name IS NULL OR name = '';
+UPDATE quotes SET display_start_date = COALESCE(display_start_date, event_date),
+    display_end_date = COALESCE(display_end_date, event_date),
+    event_start_date = COALESCE(event_start_date, event_date),
+    event_end_date = COALESCE(event_end_date, event_date),
+    is_approved = COALESCE(is_approved, 'Pending'),
+    status = COALESCE(status, 'Active'),
+    add_to_hero = COALESCE(add_to_hero, 'No');
+ALTER TABLE quotes ALTER COLUMN name SET NOT NULL;
 
 CREATE INDEX IF NOT EXISTS idx_quotes_type ON quotes(type);
 CREATE INDEX IF NOT EXISTS idx_quotes_date ON quotes(event_date);

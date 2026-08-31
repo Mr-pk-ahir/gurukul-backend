@@ -9,38 +9,66 @@ import {
 
 export class OverviewService {
 
+    private async ensureMetadataColumns(): Promise<void> {
+        await pool.query(`
+            ALTER TABLE overview_images
+            ADD COLUMN IF NOT EXISTS title TEXT NOT NULL DEFAULT '',
+            ADD COLUMN IF NOT EXISTS description TEXT NOT NULL DEFAULT ''
+        `);
+    }
+
     public async getOverviewData(): Promise<GroupedOverviewDataWithId> {
+        await this.ensureMetadataColumns();
         const result = await pool.query(
             `SELECT * FROM overview_images ORDER BY created_at ASC`
         );
         const rows: OverviewImageRow[] = result.rows;
 
         return {
-            heroSlider: rows.filter(r => r.section === "heroSlider").map(r => ({ id: r.id, url: r.url })),
-            featureImage: rows.filter(r => r.section === "featureImage").map(r => ({ id: r.id, url: r.url })),
-            smartInfrastructure: rows.filter(r => r.section === "smartInfrastructure").map(r => ({ id: r.id, url: r.url })),
+            heroSlider: rows.filter(r => r.section === "heroSlider").map(r => ({ id: r.id, url: r.url, title: r.title, description: r.description })),
+            featureImage: rows.filter(r => r.section === "featureImage").map(r => ({ id: r.id, url: r.url, title: r.title, description: r.description })),
+            smartInfrastructure: rows.filter(r => r.section === "smartInfrastructure").map(r => ({ id: r.id, url: r.url, title: r.title, description: r.description })),
         };
     }
 
     public async uploadOverviewImage(
         section: SectionType,
         url: string,
-        publicId: string
+        publicId: string,
+        title: string,
+        description: string
     ): Promise<OverviewImageRow> {
+        await this.ensureMetadataColumns();
         if (!validSections.includes(section)) {
             throw new Error("Invalid section");
         }
 
         const result = await pool.query(
-            `INSERT INTO overview_images (section, url, public_id)
-             VALUES ($1, $2, $3)
+            `INSERT INTO overview_images (section, url, public_id, title, description)
+             VALUES ($1, $2, $3, $4, $5)
              RETURNING *`,
-            [section, url, publicId]
+            [section, url, publicId, title, description]
         );
         return result.rows[0];
     }
 
+    public async updateOverviewMetadata(id: number, title: string, description: string): Promise<OverviewImageRow> {
+        await this.ensureMetadataColumns();
+        const result = await pool.query(
+            `UPDATE overview_images
+             SET title = $2, description = $3
+             WHERE id = $1
+             RETURNING *`,
+            [id, title, description]
+        );
+        if (!result.rows[0]) {
+            throw new Error("Image not found");
+        }
+        return result.rows[0];
+    }
+
     public async deleteOverviewImage(id: number): Promise<OverviewImageRow> {
+        await this.ensureMetadataColumns();
         const existing = await pool.query(
             `SELECT * FROM overview_images WHERE id = $1`,
             [id]

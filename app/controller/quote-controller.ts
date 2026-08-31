@@ -5,14 +5,18 @@ import cloudinary from "../config/cloudinary";
 class QuoteController {
     async createQuote(req: Request, res: Response): Promise<Response> {
         try {
-            const { type, date, description } = req.body;
+            const {
+                type, date, description, name, display_start_date, display_end_date,
+                event_start_date, event_end_date, is_approved, status, add_to_hero,
+            } = req.body;
             const file = req.file as any; // multer-storage-cloudinary thi aavelu file object
+            const normalizedAddToHero = add_to_hero === "Yes" || add_to_hero === "yes" ? "Yes" : "No";
 
             if (!type || !["activity", "event"].includes(type)) {
                 return res.status(400).json({ success: false, message: "type 'activity' ke 'event' j hovu joie" });
             }
             if (!date) {
-                return res.status(400).json({ success: false, message: "date jaruri chhe" });
+                return res.status(400).json({ success: false, message: "Event Start Date jaruri chhe" });
             }
             if (!file) {
                 return res.status(400).json({ success: false, message: "Image jaruri chhe" });
@@ -24,12 +28,64 @@ class QuoteController {
                 public_id: file.filename,  // Cloudinary public_id (delete mate joie)
                 description,
                 event_date: date,
+                name,
+                display_start_date,
+                display_end_date,
+                event_start_date,
+                event_end_date,
+                is_approved,
+                status,
+                add_to_hero: normalizedAddToHero,
             });
 
             return res.status(201).json({ success: true, data: newQuote });
         } catch (error) {
             console.error("createQuote error:", error);
-            return res.status(500).json({ success: false, message: "Error creating quote" });
+            const message = error instanceof Error ? error.message : "Error creating quote";
+            return res.status(500).json({ success: false, message });
+        }
+    }
+
+    async updateQuote(req: Request, res: Response): Promise<Response> {
+        try {
+            const id = Number(req.params.id);
+            const existing = await QuoteService.getQuoteById(id);
+            if (Number.isNaN(id) || !existing) {
+                return res.status(404).json({ success: false, message: "Quote not found" });
+            }
+
+            const {
+                date, description, name, display_start_date, display_end_date,
+                event_start_date, event_end_date, is_approved, status, add_to_hero,
+            } = req.body;
+            const file = req.file as any;
+            const normalizedAddToHero = add_to_hero === "Yes" || add_to_hero === "yes" ? "Yes" : "No";
+
+            if (!date || !name?.trim()) {
+                return res.status(400).json({ success: false, message: "name and date are required" });
+            }
+
+            const updatedQuote = await QuoteService.updateQuote(id, {
+                type: existing.type,
+                image_url: file?.path,
+                public_id: file?.filename,
+                description,
+                event_date: date,
+                name: name.trim(),
+                display_start_date,
+                display_end_date,
+                event_start_date,
+                event_end_date,
+                is_approved,
+                status,
+                add_to_hero: normalizedAddToHero,
+            });
+
+            return res.status(200).json({ success: true, data: updatedQuote });
+        } catch (error) {
+            console.error("updateQuote error:", error);
+            const message = error instanceof Error ? error.message : "Error updating quote";
+            return res.status(500).json({ success: false, message });
         }
     }
 
@@ -41,7 +97,8 @@ class QuoteController {
                 return res.status(400).json({ success: false, message: "Invalid type — 'activity' ke 'event' j hoi shake" });
             }
 
-            const quotes = await QuoteService.getQuotesByType(type);
+            const includeUnapproved = req.query.includeUnapproved === "true";
+            const quotes = await QuoteService.getQuotesByType(type, includeUnapproved);
             return res.status(200).json({ success: true, data: quotes });
         } catch (error) {
             console.error("getQuotesByType error:", error);

@@ -11,6 +11,8 @@ export interface OverviewImageRow {
     section: SectionType;
     url: string;
     public_id: string;
+    title: string;
+    description: string;
     created_at: Date;
 }
 

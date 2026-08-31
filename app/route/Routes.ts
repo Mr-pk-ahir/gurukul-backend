@@ -82,6 +82,7 @@ router.get("/dashboard", dashboardController.getDashboard.bind(dashboardControll
 
 router.get("/overview", overviewController.getOverview.bind(overviewController));
 router.post("/overview/update", upload.single("image"), overviewController.updateOverview.bind(overviewController));
+router.patch("/overview/:id", overviewController.updateOverviewMetadata.bind(overviewController));
 router.delete("/overview/:id", overviewController.deleteOverviewImage.bind(overviewController));
 
 router.get("/departments", departmentController.getAllDepartments.bind(departmentController));

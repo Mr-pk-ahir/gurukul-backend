@@ -21,17 +21,29 @@ export class OverviewController {
                 return res.status(400).json({ success: false, message: "No file uploaded" });
             }
 
-            const { section } = req.body as { section: SectionType };
+            const { section, title = "", description = "" } = req.body as { section: SectionType; title?: string; description?: string };
             if (!validSections.includes(section)) {
                 return res.status(400).json({ success: false, message: "Invalid section" });
             }
 
             const file = req.file as any;
-            const saved = await overviewService.uploadOverviewImage(section, file.path, file.filename);
+            const saved = await overviewService.uploadOverviewImage(section, file.path, file.filename, title.trim(), description.trim());
 
             return res.status(201).json({ success: true, message: "Overview updated successfully", data: saved });
         } catch (error: any) {
             return res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    public async updateOverviewMetadata(req: Request, res: Response): Promise<Response> {
+        try {
+            const { id } = req.params;
+            const { title = "", description = "" } = req.body as { title?: string; description?: string };
+            const updated = await overviewService.updateOverviewMetadata(Number(id), title.trim(), description.trim());
+            return res.status(200).json({ success: true, data: updated });
+        } catch (error: any) {
+            const status = error.message === "Image not found" ? 404 : 500;
+            return res.status(status).json({ success: false, message: error.message });
         }
     }
 
