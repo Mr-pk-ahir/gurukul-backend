@@ -21,6 +21,21 @@ export interface QuoteCreateInput {
     add_to_hero?: HeroSectionChoice;
 }
 
+export interface QuoteUpdateInput {
+    type: QuoteType;
+    image_url: string;
+    public_id: string;
+    description?: string;
+    name?: string;
+    display_start_date?: string;
+    display_end_date?: string;
+    event_start_date?: string;
+    event_end_date?: string;
+    is_approved?: EventApprovalStatus;
+    status?: EventStatus;
+    add_to_hero?: HeroSectionChoice;
+}
+
 export interface QuoteRow {
     id: number;
     type: QuoteType;

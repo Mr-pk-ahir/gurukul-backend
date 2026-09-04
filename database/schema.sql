@@ -46,10 +46,6 @@ CREATE TABLE IF NOT EXISTS departments (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 🎯 Default/fallback department — legacy ke unassigned records mate
-INSERT INTO departments (department_id, department_name, description)
-VALUES (1, 'General / Unassigned', 'Auto-generated default department')
-ON CONFLICT (department_id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS sections (
     section_id SERIAL PRIMARY KEY,
@@ -60,11 +56,6 @@ CREATE TABLE IF NOT EXISTS sections (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
-
--- 🎯 Default/fallback section — legacy ke unassigned records mate
-INSERT INTO sections (section_id, name, department_id, description)
-VALUES (0, 'Not Assigned', 1, 'Auto-generated dummy section for unassigned/legacy records')
-ON CONFLICT (section_id) DO NOTHING;
 
 CREATE TABLE IF NOT EXISTS users (
     suid BIGINT PRIMARY KEY,
@@ -164,7 +155,57 @@ CREATE INDEX IF NOT EXISTS idx_quotes_date ON quotes(event_date);
 -- =========================================================================
 -- 🌅 DAILY DARSHAN TABLE — Amrut Nu Aachaman ni j pattern follow kari
 -- =========================================================================
+-- =========================================================================
+-- 📘 LESSONS TABLE
+-- =========================================================================
 
+CREATE TABLE IF NOT EXISTS lessons (
+    lesson_id SERIAL PRIMARY KEY,
+    lesson_title VARCHAR(255) NOT NULL,
+    lesson_type VARCHAR(20) NOT NULL CHECK (lesson_type IN ('video','audio','image','document')),
+    media_url TEXT,
+    media_public_id VARCHAR(255),
+    description TEXT,
+    department_id INT,                 -- lesson kaya department ni "home" chhe (super admin pasand kare)
+    date_start DATE NOT NULL,
+    date_end DATE NOT NULL,
+    progress_points INT DEFAULT 50,
+    created_by BIGINT,
+    role_code VARCHAR(100),
+    assign_scope VARCHAR(20) NOT NULL DEFAULT 'all' CHECK (assign_scope IN ('all','department','section','student','group')),
+    assign_department_id INT,
+    assign_section_id INT,
+    assign_student_id BIGINT,
+    assign_group_id INT,
+    assign_head_only BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+DROP TRIGGER IF EXISTS update_lessons_modtime ON lessons;
+CREATE TRIGGER update_lessons_modtime BEFORE UPDATE ON lessons FOR EACH ROW EXECUTE PROCEDURE update_modified_column();
+
+CREATE INDEX IF NOT EXISTS idx_lessons_created_by ON lessons(created_by);
+CREATE INDEX IF NOT EXISTS idx_lessons_assign_scope ON lessons(assign_scope);
+
+-- 🔗 FK constraints (idempotent — tamara pattern pramane)
+ALTER TABLE lessons DROP CONSTRAINT IF EXISTS fk_lesson_department;
+ALTER TABLE lessons ADD CONSTRAINT fk_lesson_department FOREIGN KEY (department_id) REFERENCES departments(department_id) ON DELETE SET NULL;
+
+ALTER TABLE lessons DROP CONSTRAINT IF EXISTS fk_lesson_created_by;
+ALTER TABLE lessons ADD CONSTRAINT fk_lesson_created_by FOREIGN KEY (created_by) REFERENCES users(suid) ON DELETE SET NULL;
+
+ALTER TABLE lessons DROP CONSTRAINT IF EXISTS fk_lesson_assign_department;
+ALTER TABLE lessons ADD CONSTRAINT fk_lesson_assign_department FOREIGN KEY (assign_department_id) REFERENCES departments(department_id) ON DELETE CASCADE;
+
+ALTER TABLE lessons DROP CONSTRAINT IF EXISTS fk_lesson_assign_section;
+ALTER TABLE lessons ADD CONSTRAINT fk_lesson_assign_section FOREIGN KEY (assign_section_id) REFERENCES sections(section_id) ON DELETE CASCADE;
+
+ALTER TABLE lessons DROP CONSTRAINT IF EXISTS fk_lesson_assign_student;
+ALTER TABLE lessons ADD CONSTRAINT fk_lesson_assign_student FOREIGN KEY (assign_student_id) REFERENCES users(suid) ON DELETE CASCADE;
+
+ALTER TABLE lessons DROP CONSTRAINT IF EXISTS fk_lesson_assign_group;
+ALTER TABLE lessons ADD CONSTRAINT fk_lesson_assign_group FOREIGN KEY (assign_group_id) REFERENCES groups(group_id) ON DELETE CASCADE;
 -- =========================================================================
 -- 🌅 DAILY DARSHAN TABLE — Amrut Nu Aachaman ni j pattern follow kari
 -- =========================================================================

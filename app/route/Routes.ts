@@ -4,15 +4,17 @@ import { RoleController } from "../controller/role-controller";
 import { DepartmentController } from "../controller/department-controller";
 import DashboardController from "../controller/dashboard-controller";
 import { SectionController } from "../controller/section-controller";
+import { authenticateToken } from "../middleware/auth-middleware";
 import { OverviewController } from "../controller/overview-controller";
 import amrutAachamanController, { uploadImage } from '../controller/amrut-aachaman-controller';
 import { ApplicationController } from "../controller/Application-controller";
 import { runDynamicQuery } from "./queryController";
 import { getDashboardStats } from "../controller/dashboardController";
+import { LessonController } from "../controller/lesson-controller";
 import { GroupController } from "../controller/group-controller";
 import { TaskController } from "../controller/task-controller";
 import { UploadController } from "../controller/upload-controller";
-import { uploadAvatar, uploadSection, uploadDailyDarshan } from "../config/upload"; // 🎯 FIX: uploadDailyDarshan add karyu
+import { uploadAvatar, uploadSection, uploadDailyDarshan, uploadLesson } from "../config/upload"; // 🎯 FIX: uploadDailyDarshan add karyu
 import quoteController from "../controller/quote-controller";
 import { uploadQuote } from "../config/upload";
 import { ProgressController } from "../controller/progress-controller";
@@ -27,6 +29,7 @@ const overviewController = new OverviewController();
 const dashboardController = new DashboardController();
 const dailyDarshanController = new DailyDarshanController();
 const sectionController = new SectionController();
+const lessonController = new LessonController();
 const applicationController = new ApplicationController();
 const taskController = new TaskController();
 const progressController = new ProgressController();
@@ -35,6 +38,7 @@ const uploadController = new UploadController();
 
 router.post("/run-query", runDynamicQuery);
 router.get("/dashboard/stats", getDashboardStats);
+
 
 router.post("/upload/avatar", uploadAvatar.single("avatar"), uploadController.uploadImage.bind(uploadController));
 router.post("/upload/section", uploadSection.single("image"), uploadController.uploadImage.bind(uploadController));
@@ -46,6 +50,7 @@ router.get("/tasks/user/:suid", taskController.getTasksByUser.bind(taskControlle
 router.delete("/tasks/:id", taskController.deleteTask.bind(taskController));
 
 router.post("/quotes/create", uploadQuote.single("image"), quoteController.createQuote.bind(quoteController));
+router.put("/quotes/:id", uploadQuote.single("image"), quoteController.updateQuote.bind(quoteController));
 router.get("/quotes/type/:type", quoteController.getQuotesByType.bind(quoteController));
 router.delete("/quotes/:id", quoteController.deleteQuote.bind(quoteController));
 
@@ -109,5 +114,10 @@ router.get("/applications/types", applicationController.getApplicationTypes.bind
 
 router.post('/amrut-aachaman', uploadImage.single('image'), amrutAachamanController.create);
 router.get('/amrut-aachaman', amrutAachamanController.getAll);
+
+router.post("/lessons/create", authenticateToken, uploadLesson.single("file"), lessonController.createLesson.bind(lessonController));
+router.get("/lessons/my-lessons", authenticateToken, lessonController.getMyLessons.bind(lessonController));
+router.get("/lessons/created", authenticateToken, lessonController.getCreatedLessons.bind(lessonController));
+router.delete("/lessons/:id", authenticateToken, lessonController.deleteLesson.bind(lessonController));
 
 export default router;

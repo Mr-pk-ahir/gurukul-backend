@@ -41,6 +41,13 @@ export interface SectionProgress {
     users: UserProgress[];
 }
 
+// 🎯 Growth trend — last 30 days enrollment/activity metric
+export interface GrowthTrendPoint {
+    date: string; // YYYY-MM-DD format
+    newEnrollments: number; // OR task completions, depending on metric chosen
+    totalActive: number; // cumulative or snapshot
+}
+
 export interface DepartmentProgress {
     department_id: number;
     department_name: string;
@@ -48,4 +55,17 @@ export interface DepartmentProgress {
     completedTasks: number;
     percentage: number;
     sections: SectionProgress[];
+    growthTrend?: GrowthTrendPoint[]; // 🎯 NEW: last 30 days data
+}
+
+export interface SectionProgress {
+    section_id: number;
+    name: string;
+    department_id: number;
+    totalTasks: number;
+    completedTasks: number;
+    percentage: number;
+    users: UserProgress[];
+    studentCount?: number; // 🎯 NEW: actual student count (no admins/heads)
+    growthTrend?: GrowthTrendPoint[]; // 🎯 NEW: last 30 days data
 }

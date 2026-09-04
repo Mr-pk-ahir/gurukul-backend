@@ -1,5 +1,5 @@
 import { pool } from "../db/database";
-import { QuoteCreateInput, QuoteType } from "../module/quote-module";
+import { QuoteCreateInput, QuoteType, QuoteUpdateInput } from "../module/quote-module";
 
 function isWithinEventWindow(startDate?: string, endDate?: string): boolean {
     if (!startDate || !endDate) return false;
@@ -84,50 +84,51 @@ export class QuoteService {
         }
     }
 
-    static async updateQuote(id: number, data: QuoteCreateInput): Promise<any> {
+    static async updateQuote(id: number, data: QuoteUpdateInput): Promise<any> {
         const effectiveStatus = data.type === "event" && isWithinEventWindow(data.event_start_date, data.event_end_date)
             ? "Active"
             : (data.status || "Active");
+
+        // 🎯 FIX: event_date = $6 line kadhi nakhi (QuoteUpdateInput ma event_date chhe j nahi)
+        // ane badha placeholders re-number karya jethi values array sathe exactly match thay
         const query = `
-            UPDATE quotes
-            SET image_url = COALESCE($2, image_url),
-                public_id = COALESCE($3, public_id),
-                title = COALESCE($4, title),
-                description = $5,
-                event_date = $6,
-                name = COALESCE($4, name),
-                display_start_date = $7,
-                display_end_date = $8,
-                event_start_date = $9,
-                event_end_date = $10,
-                is_approved = $11,
-                status = $12,
-                add_to_hero = $13
-            WHERE id = $1
-            RETURNING id, type, image_url, public_id, description, event_date, created_at,
-                name, display_start_date, display_end_date, event_start_date, event_end_date,
-                is_approved,
-                CASE
-                    WHEN type = 'event'
-                        AND event_start_date IS NOT NULL
-                        AND event_end_date IS NOT NULL
-                        AND CURRENT_DATE BETWEEN event_start_date AND event_end_date
-                    THEN 'Active'
-                    ELSE status
-                END AS status,
-                add_to_hero;
-        `;
+        UPDATE quotes
+        SET image_url = COALESCE($2, image_url),
+            public_id = COALESCE($3, public_id),
+            title = COALESCE($4, title),
+            description = $5,
+            name = COALESCE($4, name),
+            display_start_date = $6,
+            display_end_date = $7,
+            event_start_date = $8,
+            event_end_date = $9,
+            is_approved = $10,
+            status = $11,
+            add_to_hero = $12
+        WHERE id = $1
+        RETURNING id, type, image_url, public_id, description, event_date, created_at,
+            name, display_start_date, display_end_date, event_start_date, event_end_date,
+            is_approved,
+            CASE
+                WHEN type = 'event'
+                    AND event_start_date IS NOT NULL
+                    AND event_end_date IS NOT NULL
+                    AND CURRENT_DATE BETWEEN event_start_date AND event_end_date
+                THEN 'Active'
+                ELSE status
+            END AS status,
+            add_to_hero;
+    `;
         const result = await pool.query(query, [
             id,
             data.image_url || null,
             data.public_id || null,
             data.name || null,
             data.description || null,
-            data.event_date,
-            data.display_start_date || data.event_date,
-            data.display_end_date || data.event_date,
-            data.event_start_date || data.event_date,
-            data.event_end_date || data.event_date,
+            data.display_start_date,
+            data.display_end_date,
+            data.event_start_date,
+            data.event_end_date,
             data.is_approved || "Pending",
             effectiveStatus,
             data.add_to_hero || "No",

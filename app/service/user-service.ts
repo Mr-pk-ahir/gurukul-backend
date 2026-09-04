@@ -178,6 +178,7 @@ export class UserService {
     return true;
   }
 
+  // 🎯 FIX: Filter by STUDENT role only — don't include admins/heads
   public async getUsersBySection(sectionId: number) {
     const query = `
       SELECT 
@@ -192,7 +193,7 @@ export class UserService {
         u.status,
         u.role_code AS "roleCode"
       FROM users u
-      WHERE u.section_id = $1
+      WHERE u.section_id = $1 AND u.role_code = 'STUDENT'
       ORDER BY u.name ASC;
     `;
     const result = await pool.query(query, [sectionId]);

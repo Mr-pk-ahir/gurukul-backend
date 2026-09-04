@@ -55,23 +55,18 @@ class QuoteController {
             }
 
             const {
-                date, description, name, display_start_date, display_end_date,
+                description, name, display_start_date, display_end_date,
                 event_start_date, event_end_date, is_approved, status, add_to_hero,
             } = req.body;
             const file = req.file as any;
             const normalizedAddToHero = add_to_hero === "Yes" || add_to_hero === "yes" ? "Yes" : "No";
-
-            if (!date || !name?.trim()) {
-                return res.status(400).json({ success: false, message: "name and date are required" });
-            }
 
             const updatedQuote = await QuoteService.updateQuote(id, {
                 type: existing.type,
                 image_url: file?.path,
                 public_id: file?.filename,
                 description,
-                event_date: date,
-                name: name.trim(),
+                name: typeof name === "string" ? name.trim() : existing.name, // 🎯 FIX: undefined hoy to crash na thay
                 display_start_date,
                 display_end_date,
                 event_start_date,
